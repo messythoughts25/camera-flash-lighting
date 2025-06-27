@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photography Lighting</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+    .controls {
+      position: absolute;
+      top: 2vh;
+      left: 2vw;
+      right: 2vw;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 1rem;
+      border-radius: 1rem;
+      z-index: 10;
+      max-width: 90vw;
+      box-sizing: border-box;
+    }
+    .controls label, .controls input, .controls button {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.75rem;
+      font-size: 1rem;
+    }
+    .dropdown {
+      position: relative;
+      width: 100%;
+      margin-bottom: 0.75rem;
+    }
+    .dropdown-toggle {
+      width: 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .dropdown-item {
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    .dropdown-item:hover {
+      background: #f0f0f0;
+    }
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .toggle-button {
+      position: absolute;
+      top: 1vh;
+      right: 2vw;
+      z-index: 11;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+    }
+    .hidden {
+      display: none;
+    }
+    .full-screen-color {
+      height: 100%;
+      width: 100%;
+      background-color: white;
+      transition: background-color 0.3s ease;
+      z-index: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      background-color: #444;
+      color: white;
+    }
+    button:hover {
+      background-color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls" id="controls">
+    <label for="mode">Mode:</label>
+    <div class="dropdown" id="modeDropdown">
+      <div class="dropdown-toggle" id="selectedMode">Select Mode</div>
+      <div class="dropdown-menu hidden" id="modeMenu"></div>
+    </div>
+
+    <label for="colorPicker">Color Picker:</label>
+    <input type="color" id="colorPicker" value="#ffffff" />
+
+    <label for="brightness">Brightness:</label>
+    <input type="range" id="brightness" min="0.1" max="1" step="0.05" value="1" />
+
+    <button onclick="startLighting()">Go</button>
+  </div>
+
+  <button class="toggle-button hidden" id="showSettings" onclick="showControls()">Settings</button>
+
+  <div class="full-screen-color" id="background"></div>
+
+  <script>
+    const colorPicker = document.getElementById("colorPicker");
+    const brightnessSlider = document.getElementById("brightness");
+    const background = document.getElementById("background");
+    const controls = document.getElementById("controls");
+    const showSettings = document.getElementById("showSettings");
+    const modeDropdown = document.getElementById("modeDropdown");
+    const modeMenu = document.getElementById("modeMenu");
+    const selectedMode = document.getElementById("selectedMode");
+
+    const modeColors = [
+      { name: "Studio", color: "#ffffff" },
+      { name: "Warm", color: "#FFC800" },
+      { name: "Alien", color: "#00ff33" },
+      { name: "Custom", color: "#ffffff" },
+      { name: "Romantic", color: "#FF69B4" },
+      { name: "Cyber", color: "#00FFFF" },
+      { name: "Fire", color: "#FF3300" },
+      { name: "Cool", color: "#0099FF" },
+      { name: "Dream", color: "#CC99FF" }
+    ];
+
+    let currentModeIndex = 0;
+
+    function renderModeMenu() {
+      modeMenu.innerHTML = "";
+      modeColors.forEach((mode, index) => {
+        const item = document.createElement("div");
+        item.className = "dropdown-item";
+        const dot = document.createElement("div");
+        dot.className = "color-dot";
+        dot.style.backgroundColor = mode.color;
+        const label = document.createElement("span");
+        label.textContent = mode.name;
+        if (index === currentModeIndex) label.style.fontWeight = "bold";
+        item.appendChild(dot);
+        item.appendChild(label);
+        item.onclick = () => {
+          currentModeIndex = index;
+          selectedMode.textContent = mode.name;
+          if (mode.name === "Custom") {
+            background.style.backgroundColor = colorPicker.value;
+          } else {
+            background.style.backgroundColor = mode.color;
+            colorPicker.value = mode.color;
+          }
+          modeMenu.classList.add("hidden");
+          renderModeMenu();
+        };
+        modeMenu.appendChild(item);
+      });
+    }
+
+    selectedMode.onclick = () => {
+      modeMenu.classList.toggle("hidden");
+    };
+
+    colorPicker.addEventListener("input", () => {
+      currentModeIndex = modeColors.length - 1;
+      selectedMode.textContent = modeColors[currentModeIndex].name;
+      background.style.backgroundColor = colorPicker.value;
+      renderModeMenu();
+    });
+
+    brightnessSlider.addEventListener("input", () => {
+      background.style.filter = `brightness(${brightnessSlider.value})`;
+    });
+
+    function startLighting() {
+      controls.classList.add("hidden");
+      showSettings.classList.remove("hidden");
+      background.style.filter = `brightness(${brightnessSlider.value})`;
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    }
+
+    function showControls() {
+      controls.classList.remove("hidden");
+      showSettings.classList.add("hidden");
+      background.style.filter = "brightness(1)";
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+
+    renderModeMenu();
+    selectedMode.textContent = modeColors[currentModeIndex].name;
+  </script>
+</body>
+</html>
